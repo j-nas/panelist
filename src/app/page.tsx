@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { LatestPost } from "@/app/_components/post";
 import { api, HydrateClient } from "@/trpc/server";
-import PanelSchedule from "./_components/panel-schedule";
+import PanelScheduleDisplay from "./_components/panel-schedule";
 
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
@@ -47,7 +47,7 @@ export default async function Home() {
           </div>
 
           <LatestPost />
-          <PanelSchedule />
+          <PanelScheduleDisplay />
         </div>
       </main>
     </HydrateClient>

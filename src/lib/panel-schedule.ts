@@ -1,4 +1,4 @@
-class PanelSchedule {
+export class PanelSchedule {
   name: string;
   location: string;
   voltage: number;
@@ -9,28 +9,44 @@ class PanelSchedule {
   kaic: number;
   date: Date;
   manufacturer: string;
-  spaces: Array<Circuit | Spare | Space> = [];
-  circuits: Circuit[];
+  bus: {
+    left: Bus;
+    right: Bus;
+  };
 
   constructor(data: PanelSchedule) {
-    this.name = data.name;
-    this.location = data.location;
-    this.voltage = data.voltage;
-    this.phase = data.phase;
-    this.supply = data.supply;
-    this.busAmps = data.busAmps;
-    this.feederAmps = data.feederAmps;
-    this.kaic = data.kaic;
-    this.date = data.date;
-    this.manufacturer = data.manufacturer;
-
-    this.circuits = data.circuits;
-
+    this.name = data.name || "H-EM";
+    this.location = data.location || "Main Electrical Room";
+    this.voltage = data.voltage || 208;
+    this.phase = data.phase || 3;
+    this.supply = data.supply || "WYE";
+    this.busAmps = data.busAmps || 400;
+    this.feederAmps = data.feederAmps || 400;
+    this.kaic = data.kaic || 22;
+    this.date = data.date || new Date();
+    this.manufacturer = data.manufacturer || "Square D";
+    this.bus = { left: [], right: [] };
   }
 
+  private landCircuits(circuits: Circuit[]) {
+    const leftBreakers = circuits
+      .filter((circuit) => circuit.position % 2 === 0)
+      .sort((a, b) => a.position - b.position);
+    const rightBreakers = circuits
+      .filter((circuit) => circuit.position % 2 !== 0)
+      .sort((a, b) => a.position - b.position);
+    for (const breaker of leftBreakers) {
+      this.spaces.left.push(breaker);
+      for (let i = 1; i < breaker.poles; i++) {
+        this.spaces.left.push("SPACE");
+      }
+    }
 
-  landCircuits(circuits: Circuit[]) {
-    this.spaces = circuits;
+    return { left: leftBreakers, right: rightBreakers };
+  }
+
+  private isSpaceFree(position: number) {
+    throw new Error("Not implemented");
   }
 }
 
@@ -45,37 +61,30 @@ const panelScheduleA = {
   kaic: 22,
   date: new Date(),
   manufacturer: "Square D",
-
 };
-
 
 const circuits = [
   {
+    id: crypto.randomUUID(),
     position: 1,
     label: "Receptacle",
     rating: 20,
     load: 1440,
     poles: 1,
-  }
-]
+  },
+];
 type Circuit = {
+  id: string;
   position: number;
   label: string;
   rating: number;
   load: number;
   poles: 1 | 2 | 3;
-}
+};
 
-type Spare = {
-  position: number;
-  label: "Spare";
-  rating: 0;
-  load: 0;
-}
+type Space = 0;
 
-type Space = {
-  position: number;
-  label: "";
-  rating: 0;
-  load: 0;
-}
+type OnePoleBreaker = [Circuit];
+type TwoPoleBreaker = [Circuit, Space];
+type ThreePoleBreaker = [Circuit, Space, Space];
+export type Bus = Array<OnePoleBreaker | TwoPoleBreaker | ThreePoleBreaker>;
